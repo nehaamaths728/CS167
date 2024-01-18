@@ -1,0 +1,4 @@
+Why did our team choose to use SparkSQL as our Big Data System for all three tasks in this project?
+Using SparkSQL made running analytic queries on the Parquet file easier since it is column-formatted data
+Using SparkSQL made running transactional queries easier
+Using SparkSQL made running the Parquet file easier to use since it is row formatted-data

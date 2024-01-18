@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+
+    <title>Chicago Crime Places</title>
+
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css"/>
+
+    <style>
+        #map {
+        margin-top: 100px;
+        width: 100%;
+        height: 500px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="jumbotron">
+    <div class="container">
+        <h1>Chicago Crime Places</h1>
+
+        <p>This page marks different crime places in chicago from 2001 to
+            present.</p>
+    </div>
+</div>
+
+<div class="container">
+    <form id="crimeFilter" action="filter">
+
+        <div class="row">
+            <div class="col-md-4">
+                <label for="fromYear">Year:</label>
+                <select class="form-control" name="year">
+                    <option th:each="i : ${#numbers.sequence( 2001, 2015)}"
+                            th:value="${ i }"
+                            th:selected="${ i==2015 }"
+                            th:text="${ i }">2001
+                    </option>
+                </select>
+            </div>
+            <!--
+            <div class="col-md-6">
+                <label for="toYear">To Year:</label> <select class="form-control"
+                    name="toYear">
+                    <option th:each="i : ${#numbers.sequence( 2001, 2015)}"
+                        th:value="${ i }"
+                        th:selected="${ i==2015 }"
+                        th:text="${ i }">2001</option>
+                </select>
+            </div>
+            -->
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 form-group">
+                <label for="toYear">Primary Type:</label>
+                <select name="crimeType" class="form-control">
+                    <option
+                            th:each="type : ${T(com.rdk.crime.domain.CrimeType).values()}"
+                            th:value="${type}" th:text="${type.displayName}"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 form-group">
+                <button type="submit" class="btn btn-primary btn-lg">Filter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id="map"></div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script
+        src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<script th:inline="javascript">
+        /*<![CDATA[*/
+
+        var map;
+        var markers = [];
+        var crimes = [];
+
+
+        function initMap() {
+          map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 10,
+            center: {lat: 41.9, lng: -87.6} // Chicago
+          });
+        }
+
+        function setMarkers() {
+          for (var i = 0; i < crimes.length; i++) {
+            var crime = crimes[i];
+
+            var crimeLatlng = new google.maps.LatLng(parseFloat(crime.latitude), parseFloat(crime.longitude));
+
+            var marker = new google.maps.Marker({
+              position: crimeLatlng,
+              title: crime.primaryType + " - " + crime.description,
+              zIndex: i
+            });
+
+            marker.setMap(map);
+            markers.push(marker);
+          }
+        }
+
+        function deleteMarkers() {
+            for (var i = 0; i < markers.length; i++) {
+                markers[i].setMap(null);
+            }
+
+            crimes = [];
+        }
+
+        $("#crimeFilter").submit(function(e){
+            e.preventDefault();
+            var form = $("#crimeFilter");
+
+            $.ajax({
+                method: "GET",
+                url: form.attr("action"),
+                data: form.serialize()
+              })
+              .done(function(data) {
+                    deleteMarkers();
+                    crimes = data;
+                    setMarkers();
+            });
+
+          });
+        /*]]>*/
+
+
+</script>
+
+<script async="async" defer="defer"
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCKXrDPEr4ktdybfaTYh4b7RiFwViehsm4&amp;signed_in=true&amp;callback=initMap"></script>
+</body>
+
+</html>
